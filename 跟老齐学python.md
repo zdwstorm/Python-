@@ -1,4 +1,4 @@
-# 跟老齐学python                                     <sub>—storm</sub>
+# python笔记-基本的数据类型                      <sub>  —storm</sub>
 
 例子1
 
@@ -1230,11 +1230,432 @@ temp就是所谓的模板，双引号所包裹的实质上是一段HTML代码。
 
 1. copy和deepcopy
 
+```python
+>>>a=5
+>>>b=a  #对象有类型，变量无类型，变量只是一个标签。
+>>>b
+5
+```
 
+==通过赋值只是只是实现了所谓的假装拷贝==
 
+```python
+>>>a={'a':1,'b':2}
+>>>id(a)
+1609415613176
+>>>b=a.copy
+>>>id(b)
+1609416095208
+```
 
+*copy方法能够生成一个与被复制对象相同的数据，但它在内存中开辟了另外一个空间。此时修改两者中的任意一个，都不会对对方造成影响。*
 
+```python
+>>>x={'a':1,'b':[1,23]}
+>>>y=x.copy()
+>>>y['b'].remove(23)
+>>>x
+{'a': 1, 'b': [1]} #x也发生了变化
+```
 
+深层的原因与Python存储的对象类型（在不少地方也用“数据类型”的说法，其实两者是一样的，“对象”和“数据”在Python中等同，不用区分）特点有关，Python只存储基本类型的数据，比如int、str，对于不是基础类型的，比如字典的值是列表，Python不会在被复制的那个对象中重新存储，而是用引用的式，指向原来的值。通俗地说，Python在所执行的复制动作中，如果是基本类型的数，就在内存中重新建个窝，如果不是基本类型的，就不新建窝了，而是用标签引用原来的窝。即如果比较简单，随便建立新窝即可；但是，如果对象太复杂了，就别费劲了，还是引用一下原来的省事。
+
+把用copy()实现的拷贝称之为“浅拷贝”（不仅Python，很多语言都有“浅拷贝”。顾名思义，没有解决深层次问题。言外之意，还有能够解决深层次问题的方法）。与“浅拷贝”对应，在Python中，还有一个“深拷贝”（deep copy）。不过，要用import导入一个模块。
+
+```python
+>>>import copy
+>>>x={'a':1,'b':[2,3]}
+>>>y=copy.deepcopy(x) #深拷贝
+>>>id(x['b'])
+609416019656
+>>>id(y['b'])
+1609413189320 #此时列表已经被分配到了不同的内存。
+>>>x['b'].remove(3)
+>>>y
+{'a':1,'b':[2,3]} #不会发生变化 
+```
+
+2. clear
+
+在交互模式下，用help是一个很好的习惯 。
+
+```python
+>>>a={'a':1,'b':2}
+>>>a.clear()
+>>>a
+{}
+```
+
+clear的含义是将字典清空，得到的是“空”字典 。它和del有着很大的区别，del是将字典删除，内存中就没有它了，并不是为“空”。
+
+```python
+>>>a={'a':1,'b':2}
+>>>del a
+>>>a
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+NameError: name 'a' is not defined
+```
+
+>如果要清空一个字典，还能够使用a={}这种方法，但这种方法的本质是将变量a转向了{}这个对象，那么原来的呢？原来的成为了断线的风筝。这样的东西在
+>Python中称之为垃圾，而且Python能够自动将这样的垃圾回收。读者就不用关心它了，正Python会处理的。
+
+3. get和 setdefault
+
+```python
+>>>a={'a':1,'b':1}
+>>>a.get('b')
+1
+>>>a['b']
+1
+>>>a.get('c') #键不在字典中返回None。
+None
+>>>a['c']  #键不在字典中会报错。
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+KeyError: 'c'
+```
+
+```python
+>>>a={'a':1,'b':2,'c':3}
+>>>b=a.get('d','4')  #如果得不到键的值，可以返回设定的第二个返回值。
+>>>b
+4
+>>>a
+{'a':1,'b':2,'c':3}
+```
+
+```python
+>>>a={'a':1,'b':2,'c':3}
+>>>a.setdefault('c') #键存在就返回它的值。
+3
+>>>a.setdefault('d',4) #键不存在就返回设定的返回值。
+>>>a
+{'a':1,'b':2,'c':3,'d':4}
+>>>a.setdefault('e') #未设置第二个参数，返回None。
+>>>a
+{'a':1,'b':2,'c':3,'d':4,'e':None}
+```
+
+4. items/iteritems，keys/iterkeys，values/itervalues
+
+D.items可以得到一个关于字典的列表，列表中的元素是由字典中的键和值组成的元组。
+
+```python
+>>>a={'a':1,'b':2,'c':3}
+>>>b=a.items()
+>>>b
+[('a',1),('b',2),('c',3)]
+```
+
+5. pop和popitem
+
+> list.remove(x)用来删除指定的元素，list.pop([i])用来删除指定索引的元素，如果不提供索引值，就默认删除最后一个。
+
+D.pop(k[,d])是以字典的键为参数，删除指定键的键值对，当然，如果输入对应的值也可以，那个是可选的。
+
+```python
+>>>a={'a':1,'b':2}
+>>>a.pop('b')
+2
+>>>a
+{'a':1}
+>>>a.pop() #pop中的参数不能省略，会报错。
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: pop expected at least 1 arguments, got 0    
+```
+
+如果要删除字典中没有的键值对，也会报错。
+
+```python
+>>>a={'a':1,'b':2}
+>>>a.pop('c')
+Traceback (most recent call last):
+File "<stdin>", line 2, in <module>
+KeyError: 'c'
+```
+
+> D.popitem()和list.pop()有相似之处，不用写参数(list.pop可以不写参数)，但是，D.popitem()不是删除最后一个，dict没有顺序，也就没有最后和最先了，它是随机删除一个，并将所删除的返回。但当字典本身为空时，D.popitem也会报错。
+
+```python
+>>>a={'a':1,'b':2}
+>>>a.popitem()
+('a':1) #删除是随机的，返回值是元组类，且其元素是所删除的键和值。
+```
+
+6. update
+
+update的作用就是更新字典，其参数可以是字典或者某种可以迭代的对象。
+
+```python
+>>>a={'a':1,'b':2}
+>>>b={'c':1}
+>>>a.update(b)
+>>>a
+{'a':1,'b':2,'c':1}
+>>>a.update([('d',4)]) #列表内的元素是元组
+>>>a
+{'a':1,'b':2,'c':1,'d':4}
+```
+
+7. has_key
+
+这个函数的功能是判断字典中是否存在某个键。
+
+```python
+>>>a={'a':1,'b':2,'c':3}
+>>>a.has_key('a')
+True
+```
+
+### 1.11 集合
+
+==在python中，对象类型本质上是自己可以定义的。==
+
+> 各种对象类型都可以通过下述方法但不限于这些方法查到：
+>
+> - 交互模式下用dir()或者help()
+> - 搜索引擎（Google）
+
+对学过的对象类型做个归纳整理：
+
+- 能够索引的，如list/str,其中的元素可以重复。
+- 可变的，如list/dict，即其中的元素/键值对可以原地修改。
+- 不可变的，如str/int,即不能进行原地修改。
+- 无索引序列的，如dict,即其中的元素（键值对）没有排列顺序。
+
+#### 1.11.1 创建集合
+
+集合的英文是set,翻译过来是“集合”。它的特点是：有的可变，有的不可变，元素无次序，不可重复。
+
+如果说元组（tuple）算是列表（list）和字符串（str）的杂合，那么集合（set）则是list和dict的杂合。
+
+集合拥有类似字典的特点：可以用{ }花括号来定义：其中的元素没有序列，也就是非序列类型的数据，而且集合中的元素不可重复，这类似于dict。
+
+集合也有一点列表的特点：有一种集合可以在原处修改。
+
+```python
+>>>sl=set('qiwsir')
+>>>sl
+{'q','i','s','r','w'}#将字符串中的字拆解开形成了集合，但sl中只有一个i,也就是集合中元素不能重复。
+```
+
+```python
+>>>s2=set(['a','b','b','c','d'])
+>>>s2
+{'a','d','c','b'}#无重复元素，且显示的顺序与开始建立是不一样
+```
+
+```python
+>>>s3={'google','baidu'}
+>>>s3
+{'baidu','google'}
+```
+
+==使用{ }创建集合的方式并不提倡，因为在某些情况下，python搞不清楚是字典还是集合。==
+
+```python
+>>>s1={'a','b',{'a':1,'b':1},123}
+Traceback (most recent call last):
+  File "<pyshell#8>", line 1, in <module>
+    s1={'a','b',{'a':1,'b':1},123}
+TypeError: unhashable type: 'dict'
+>>>s2={'a','b',[123]}
+Traceback (most recent call last):
+  File "<pyshell#9>", line 1, in <module>
+    s2={'a','b',[123]}
+TypeError: unhashable type: 'list'
+```
+
+>认真阅读报错信息，有这样的词汇：“unhashable”，在理解这个词之前，先看它的反义词“hashable”，很多时候翻译为“可哈希”，其实它有一个不是音译的名词“散列”。如果我们简单点理解，某数据“不可哈希”（unhashable）就是其可变，如列表和字典都能原地修改，就是unhashable。否则，不可变的，类似字符串那样不能原地修改的就是hashable（可哈希）。
+
+对于字典类型，其键必须是hashable,即不可变。
+
+集合，其元素也是‘可哈希的’。上面的例子，试图将字典、列表作为元素的元素，就报错了。
+
+```python
+>>>s=set('google')
+>>>s
+{'g','l','e','o'}
+>>>s[1]='i'
+Traceback (most recent call last):
+  File "<pyshell#12>", line 1, in <module>
+    s[1]='i'
+TypeError: 'set' object does not support item assignment
+```
+
+==集合不是序列类型，不能用索引方式对其进行修改==
+
+类型名称函数能够实现类型转换，比如str()就是将对象转化为字符串，同理，分别用list()和set()能够实现集合和列表两种对象之间的转化。
+
+```python
+>>>s=set('google')
+>>>sl=list(s)
+>>>sl
+['g','l','o','e']
+```
+
+特别说明，利用set()建立起来的集合是可变集合，可变集合都是unhashable类型的。
+
+#### 1.11.2 集合的函数 
+
+-  add和update
+
+`a={}`的方式不能建立集合（set）。只能建立字典对象。
+
+```python
+>>>a=set()
+>>>a.add('python') #增加一个元素，原地修改
+>>>a
+{'python'}
+>>>a.add([1,2,3])#列表是不可哈希的，集合中的元素应该是hashable类型。
+Traceback (most recent call last):
+  File "<pyshell#5>", line 1, in <module>
+    a.add([1,2,3])
+TypeError: unhashable type: 'list'
+>>>a.add('[1,2,3]')
+>>>a
+{'python','[1,2,3]'}
+```
+
+除了add()之外，还能够从另外一个集合中合并过来元素，方法是set.update(s2)。
+
+```python
+>>>a={'python','[1,2,3]'}
+>>>b=set(['google'])
+>>>a.update(b)
+>>>a
+{'python','[1,2,3]','google'}
+```
+
+- pop，remove，discard，clear
+
+```python
+>>>a={'python','[1,2,3]'}
+>>>a.pop()#从集合中任意选一个删除，并返回该值
+'python'
+>>> a.pop('[1,2,3]')#如果指定删除某个元素就会报错
+Traceback (most recent call last):
+  File "<pyshell#8>", line 1, in <module>
+    a.pop('[1,2,3]')
+TypeError: pop() takes no arguments (1 given)
+```
+
+set.pop()是从集合中随机选一个元素删除并将这个值返回，但是不能指定删除某个元素。报错信息告诉我们，pop()不能有参数。此外，如果集合是空的了，再做pop()操作也报错。
+
+```
+>>>a={'a','b','c'}
+>>>a.remove('a')
+>>>a
+{'b','c'}
+>>>a.remove('d') #元素不存在就报错
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+KeyError: 'd'
+>>>a.discard('d')#元素不存在就什么都不做
+```
+
+在删除上还有一个绝杀，就是set.clear(),它的功能是 ：删除所有元素
+
+#### 1.11.3 不变的集合
+
+以set创立的集合都是可原地修改的集合，或者说是可变的，也就是unhashable.还有一种集合不能原地修改，这种集合的创建方法是用frozenset(),顾名思义这是一个被“冻结”的集合，当然是不能修改的。这种集合就是hashable类型—可哈希。
+
+```python
+>>>f=frozenset('python')
+>>>f.add('python') #不可修改
+Traceback (most recent call last):
+  File "<pyshell#12>", line 1, in <module>
+    f.add('python')
+AttributeError: 'frozenset' object has no attribute 'add'
+```
+
+#### 1.11.4 集合的运算
+
+- 元素与集合的关系，要么属于，要么不属于
+
+```python
+>>>a=set('python')
+>>>a
+{'o','n','p','y','h','t'}
+>>>'z' in a
+False
+>>>'o' in a
+True
+```
+
+- 集合与集合的关系
+
+  - 等于
+
+  ```python
+  >>>a=set('python')
+  >>>b=set('hello, python')
+  >>>b
+  {'n', 't', ',', 'y', 'e', ' ', 'l', 'h', 'o', 'p'}
+  >>>a==b
+  False
+  >>>a!=b
+  True
+  ```
+
+  - 子集
+
+  ```python
+  >>>a=set('python')
+  >>>b=set('hello, python')
+  >>>a<b #a是b的子集
+  True
+  >>>a.issubset(b)
+  True
+  >>>b.issuperset(a) #b是a的超集
+  True
+  ```
+
+  - 并集
+
+  ```
+  >>>a={'a','b'}
+  >>>b={'c','d'}
+  >>>a|b
+  {'a','b','c','d'}
+  >>>a.union(b)
+  {'a','b','c','d'}
+  ```
+
+  - 交集
+
+  ```python
+  >>>a={'a','b'}
+  >>>b={'b','c'}
+  >>>a&b
+  {'b'}
+  >>>a.intersection(b)
+  {'b'}
+  ```
+
+  - 差集
+
+  ```python
+  >>>a={'a','b'}
+  >>>b={'b','c'}
+  >>>a-b
+  {'a'}
+  >>>a.difference(b)
+  {'a'}
+  ```
+
+  - 对称差集
+
+  ```python
+  >>>a={'a','b'}
+  >>>b={'b','c'}
+  >>>a.symmetric_difference(b)
+  {'a','c'}
+  ```
+
+  
 
 
 
