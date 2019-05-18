@@ -1,4 +1,4 @@
-# python笔记-语句和文件                      <sub>  —storm</sub>
+# python笔记-语句和文件    <sub> —storm </sub>
 
 ## charpter 2 语句和文件
 
@@ -864,11 +864,161 @@ with方法不需要关闭文件。
 
 有时候需要知道一个文件的有关状态（也称为属性），比如创建日期，访问日期，修改日期，大小等。在os模块中，有这样一个方法，专门让我们查看文件的这些状态参数。
 
-```
+```python
 >>>import os
 >>>file_stat=os.stat('a.txt') #查看文件的状态
+>>>file_stat
+os.stat_result(st_mode=33206, st_ino=3940649674427252, st_dev=2056923847, st_nlink=1, st_uid=0, st_gid=0, st_size=13, st_atime=1557661871, st_mtime=1557661870, st_ctime=1557661870)
 >>>file_stat.st_ctime #查看文件创建时间
+>>>a.st_ctime
+1557661870.4928591 #时间戳
+>>>import time
+>>>time.localtime(a.st_ctime) 
+time.struct_time(tm_year=2019, tm_mon=5, tm_mday=12, tm_hour=19, tm_min=51, tm_sec=10, tm_wday=6, tm_yday=132, tm_isdst=0)
+
 ```
+
+#### 2.6.5 read/readline/readlines
+
+EOF: end of file
+
+- read: 如果指定了参数size，就按照该指定长度从文件中读取内容，否则，就读取 全文。被读出来的内容，全部塞到一个字符串里面。这样有好处，就是东西都到 内存里面了，随时取用，比较快捷；“成也萧何败也萧何”，也是因为这一点，如 果文件内容太多，内存会吃不消的。
+- readline：那个可选参数size的含义同上。它以行为单位返回字符串，也就是每次 读一行，依次循环，如果不限定size，直到最后一个返回的是空字符串，意味着到 文件末尾了（EOF）。
+- readlines：size同上。它返回的是以行为单位的列表，即相当于先执行readline()， 得到每一行，然后把这一行的字符串作为列表中的元素塞到一个列表中，最后将 此列表返回。
+
+```python
+>>>with open('a.txt','w') as f:
+	f.write('a\nb\nc\n')
+>>>with open('a.txt') as f:
+	print(f.read())  #读到文件尾部
+>>>with open ('a.txt') as f:
+	print(f.readline())  #逐行读取文件
+a
+>>>with open ('a.txt') as f:
+	print(f.readlines())
+['a\n', 'b\n', 'c\n'] #返回一个列表，列表中的每个元素都是一个字符串，每个字符串中的内容就是文件中的一行文字，含行末的符号。
+```
+
+#### 2.6.6 读很大的文件
+
+如果文件太大，就不能用read()或者readlines()一次性将全部内容读入内存，可以使用while循环和readline()来完成这个任务。
+
+在python中，一旦遇到比较特殊的、棘手的问题，往往有好的工具出现。在对付很大的文件时，就有一个模块供我们驱使：fileinput模块。
+
+```python
+>>>import fileinput
+>>>for line in fileinput.input('a.txt'):
+    print(line,end='')
+a
+b
+c
+```
+==file是可迭代的数据类型，直接用for来实现迭代过程。==
+
+#### 2.6.7 seek()
+
+这个函数的功能是让指针移动。
+
+`file.tell()可以显示指针的位置`
+
+seek函数
+
+seek（...）seek（offset[，whence]）->None.Move to new file position. 
+
+whence的值：
+
+-  默认值是0，表示从文件开头开始计算指针偏移量的值（简称偏移量）。这时的offset必须是大于等于0的整数。
+- 是1时，表示从当前位置开始计算偏移量。offset如果是负数，则表示从当前位置向前移动，整数表示向后移动。
+- 是2时，表示相对文件末尾移动。
+
+### 2.7 迭代 
+
+名词 :
+
+- 循环,指的是在满足条件的情况下，重复执行同一段代码。比如，while语句。
+- 迭代，指的是按照某种顺序逐个访问对象中的每一项，比如 ，for语句。
+- 递归，指的是一个函数不断调用自身的行为，比如，以编程方式输出著名的斐波那契数列。
+- 遍历，指的是按照一定的规则访问树形结构中的每个节点，而且每个节点都只能访问一次。
+
+#### 2.7.1 迭代工具
+
+例子：要访问对象中的每个元素，可以这么做：
+
+```python
+>>>lst
+['w','o','r','l','d']
+>>>for i in lst:
+    print(i,end='')
+w o r l d
+```
+
+`b=iter(lst)`  迭代器
+
+#### 2.7.2 文件迭代器
+
+文件(a.txt)内容如下 ：
+
+****
+
+Learn python with qiwsir. 
+
+There is free python course. 
+
+The website is:
+
+ http://qiwsir.github.io 
+
+Its language is Chinese.
+
+****
+
+用迭代器来操作这个文件:
+
+```python
+>>>f= open('a.txt')  #默认'r'
+>>>f.reanline()  #读第一行
+'Learn python with qiwsir. '
+>>>f.readline()#读第二行
+'There is free python course.'      
+```
+
+```python
+>>>with open('a.txt') as f:
+    for line in f:
+        print(line)
+```
+
+列表解析也能够作为迭代工具。
+
+`[line for line in open('a.txt')]`
+
+其实，迭代器远远不止上述这么简单，下面的例子：
+
+```python
+>>> list(open('a.txt'))   
+['Learn python with qiwsir.\n', 'There is free python course.\n', 'The website is:\n', 'http://qiwsir.g ']
+>>> tuple(open('208.txt'))   
+('Learn python with qiwsir.\n', 'There is free python course.\n', 'The website is:\n', 'http://qiwsir.g')
+>>> "$$$".join(open('208.txt'))    
+'Learn python with qiwsir.\n$$$There is free python course.\n$$$The website is:\n$$$http://qiwsir.githu 
+>>> a,b,c,d,e = open("208.txt")
+>>> a 
+'Learn python with qiwsir.\n' 
+>>> b 
+'There is free python course.\n' 
+>>> c 
+'The website is:\n'
+>>> d 
+'http://qiwsir.github.io\n' 
+>>> e 
+'Its language is Chinese.\n'
+```
+
+
+
+
+
+
 
 
 
