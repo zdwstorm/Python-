@@ -181,7 +181,7 @@ class 美女：
 
   class person(object):
 
-  ​	def `_init_`(self,name):
+  ​	def `__init__`(self,name):
 
   ​		self.name=name
 
@@ -209,7 +209,71 @@ class 美女：
 
   2. 初始化
 
+  def_init_这个函数比较特殊，并且有一个名字，叫作初始化函数（注意，很多教材和资料中都把它叫作构造函数）。它是以两个下划线开始，然后以两个下划线结束。
   
+  所谓初始化，就是让类有一个基本的面貌。做很多事情都要初始化，让事情有一个具体的起点状态。在类被实例化的时候就执行这个函数，从而将初始化的一些属性可以放到这个函数里面。
+  
+  此例中的初始化函数就意味着实例化的时候，要给参数name提供一个值，作为类初始化的内容。就是在这个类被实例化的同时，要通过name参数传递一个值，这个值一开始就被写入类和实例中，称为类和实例的一个属性。
+  
+  `girl=Person('canglaoshi')`
 
+girl就是一个实例对象，它有属性和方法，这里仅说属性，当通过上面的方式实例化后，就自动执行了初始化函数，让实例girl就具有了name属性。
 
+```python
+>>>print(girl.name)
+```
+
+这就是初始化的功能，简而言之，通过初始化函数，确定了这个实例（类）的“基本属性”。
+
+初始化函数就是一个函数，所以，它的参数设置也符合前面学过的函数参数设置规范。比如：
+
+****
+
+```python
+def __init__(self,*args):
+    pass
+```
+
+------
+
+这种类型的函数*args和前面讲述的函数参数一样，self这个参数是必须要有的。
+
+很多时候，并不是每次都要从外面传入数据，有时候会把初始化函数的某些参数设置默认值，如果没有新的数据传入，就应用 这些默认值。
+
+****
+
+```python
+>>>class Person:
+    def __init__(self,name,lang='golang',website='www.google.com'):
+        self.name=name
+        self.lang=lang
+        self.website=website
+        self.email='1044857432@qq.com'
+<<<laoqi=Person('laoqi')
+>>>info=Person('qiwsir',lang='python',website='qiweisir.github.io')
+>>>print('laoqi.name=',laoqi.name)
+>>>print('info.name=',info.name)
+>>>print('-'*10)
+>>>print('laoqi.lang=',laoqi.lang)
+>>>print('-'*10)
+>>>print('laoqi.website=',laoqi.website)
+>>>print('info.websie',info.website)        
+```
+
+运行结果
+
+```python
+laoqi.name= LaoQi
+info.name= qiwsir
+-------
+laoqi.lang= golang
+info.lang= python
+-------
+laoqi.website= www.google.com
+info.website= qiwsir.github.io
+```
+
+在编程界有这样一句话：“类是实例工厂”，什么意思呢？生产物品，比如生产电脑，一个工厂可以生产好多电脑，那么，类就能“生产”好多实例，所以，它是“工厂”。比如上面例子中，就有两个实例。
+
+#### 4.2.3 类中的函数（方法）
 
