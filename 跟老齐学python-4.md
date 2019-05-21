@@ -487,7 +487,126 @@ foo.x+=1的本质是实例foo又建立了一个新的属性，但是这个属性
 
 foo.y就是新建的一个实例属性，它没有影响原来的实例属性foo.x。
 
+前面看到了实例属性不左右类属性，反过来，类属性能否影响实例属性呢？实例就是通过实例化类实现的，按照推理，实例属性应该受到类属性的影响。
 
+```python
+>>>A.x+=1
+>>>A.x
+8
+>>>foo.x
+8
+```
 
+实例属性的值随着类属性的值变化而变化了。
 
+综上，“类属性不受实例属性影响，但实例属性受到类属性左右”，不过，这个结论是有条件的，前面例子中类内的变量应用的是不可变对象（整数）。根据对可变对象和不可变对象的研究经验（可参考浅拷贝和深拷贝），按照保守主义的原则，还应考虑对象是可变对象的情形，因为可变数据能够进行原地修改，这可能会导致不一样。
 
+****
+
+```python
+>>>class B(object):
+    y=[1,2,3]
+>>>B.y
+[1,2,3]
+>>>bar=B()
+>>>bar.y
+[1,2,3]
+>>>bar.y.append(4)
+>>>bar.y
+[1,2,3,4]
+>>>B.y
+[1,2,3,4] #类属性此时也发生了变化
+>>>B.y.append('aa')
+>>>B.y
+[1,2,3,4,'aa']
+>>>bar.y
+[1,2,3,4,'aa']
+```
+
+当类中变量引用的是可变对象时，类属性和实例属性都能直接修改这个对象，从而影响另一方的值。
+
+```python
+>>>foo=A()
+>>>dir(foo) #实例化A，可以查看其所有的属性
+```
+
+增加一个类属性，同时在实例属性中也增加了一样的名称和数据的属性。
+
+```python
+>>>A.y='python'
+>>>foo.y
+'python'
+```
+
+反过来，增加实例属性，会不会也增加了一个类属性呢？
+
+```python
+>>> foo.z = "python"
+>>> foo.z
+'python'
+>>> A.z
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+AttributeError: type object 'A' has no attribute 'z'
+```
+
+类并没有收纳通过实例增加的这个属性，这进一步说明，类属性不受实例属性左右。
+
+不管是通过类，还是通过实例，都可以增加和修改属性，其方法就是通过类或者实例的点号操作来实现，即object.attribute，可以实现对属性的修改和增加。
+
+#### 4.3.2  数据流转
+
+在类的应用中，最广泛的是将类实例化，通过实例来执行各种方法（即类里面的函数）。所以，对此过程中的数据流转一定要弄明白。
+
+```python
+>>>class Person(object):
+    def _init_(self,name):
+        self.name=name
+    def getName(self):
+        return self.name
+    def breast(self,n):
+        self.breast=n
+    def color(self,color):
+        print("{} is {}".format(self.name,color))
+    def how(self):
+        print('{} breast is {}'.format(self.name,self.breast))
+>>>girl=Person('canglaoshi')
+>>>girl.breast(90)
+>>>girl.color('white')
+>>>girl.how()
+```
+
+运行结果
+
+```python
+canglaoshi is white
+canglaoshi breast is 90
+```
+
+![截图20190522073332](C:\Users\storm\Desktop\截图20190522073332.png)
+
+创建实例girl=Person('canglaoshi')，注意观察图上的箭头方向。girl这个实例和Person类中的self对应，这正是应了上节所概括的“实例变量与self对应，实例变量主外，self主内”的结论。“canglaoshi”是一个具体的数据，通过初始化函数中的name参数，传给selfname，你应已知self也是一个实例，可以为它设置属性，self.name就是一个属性，经过初始化函数，这个属性的值由参数name传入，现在就是“canglaoshi”。
+
+在类person的其他方法中，都是以self为第一个或唯一一个参数。注意，在python中，这个参数要显明写上，在类内部的 函数的参数是不能省略的。这就表示所有python方法都继承self实例对象，它的属性也被带到每个函数中。例如在其他函数里面使用self.name即是调用前面已经确定的实例属性参数。当然，在函数中，还可以继续为实例self增加属性，比如self.breast。这样，通过self实例，就实现了数据在类内部的流转。
+
+如果要把数据从类里面传到外面，可以通过return语句实现。如上述例子中所表示的getName方法。
+
+实例名称girl和self是对应关系，实际上，在类里面也可以用girl代替self。例如，做如下的修改：
+
+```python
+>>>class Person(object):
+    def _init_(self,name):
+        self.name=name
+    def getName(self):
+       # return self.name
+         return girl.name #修改成这样，但是在实际编程实践中不要这么做。
+>>>girl=Person('canglaoshi')
+>>>name=girl.getName()
+>>>print(name)
+```
+
+运行结果：
+
+`canglaoshi`
+
+这个例子说明，在实例化之后，实例变量girl和函数里面的self实例是完全对应的。但是，千万不要用上面修改的方式，因为那样写使类没有独立性，这是大忌。
