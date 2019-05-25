@@ -377,7 +377,7 @@ self这个实例跟前面说的那个girl所引用的实例对象一样，也有
 
 ```python
 >>>class Person():
-    def_init_(self,name):
+    def__init__(self,name):
         self.name=name
         self.email="1044957332@qq.com" #这个属性不是通过参数传入的 
 >>>info=Person("qiwsir")
@@ -560,7 +560,7 @@ AttributeError: type object 'A' has no attribute 'z'
 
 ```python
 >>>class Person(object):
-    def _init_(self,name):
+    def __init__(self,name):
         self.name=name
     def getName(self):
         return self.name
@@ -595,7 +595,7 @@ canglaoshi breast is 90
 
 ```python
 >>>class Person(object):
-    def _init_(self,name):
+    def __init__(self,name):
         self.name=name
     def getName(self):
        # return self.name
@@ -610,3 +610,526 @@ canglaoshi breast is 90
 `canglaoshi`
 
 这个例子说明，在实例化之后，实例变量girl和函数里面的self实例是完全对应的。但是，千万不要用上面修改的方式，因为那样写使类没有独立性，这是大忌。
+
+#### 4.3.3 命名空间
+
+命名空间（namespaces），在研究类或者面向对象编程中，它常常被提到。虽然在函数那部分已经对命名空间有初步解释，但那是在函数的知识范畴中的理解。现在，我们在类的知识范畴中理解“类命名空间”——定义类时，所有位于class语句中的代码都在某个命名空间中执行，即类命名空间。
+
+命名空间是从所定义的命名到对象的映射集合。
+
+不同的命名空间可以同时存在，彼此相互独立互不干扰。
+
+命名空间因为对象的不同也有所区别，可以分为如下几种。
+
+- 内置命名空间：python运行起来 ，它们就存在了。内置函数的命名空间都属于内置命名空间，所以，我们可以在任何程序中直接运行它们，比如前面的id()，不需要做什么操作，拿过来就能直接使用。
+- 全局命名空间：每个模块创建它自己所拥有的全局命名空间，不同模块的全局命名空间彼此独立，不同模块中相同名称的命名空间，也会因为模块的不同而不相互干扰。
+- 本地命名空间：模块中有函数或者类，每个函数或者类所定义的命名空间就是本地命名空间。如果函数返回了结果或者抛出异常，则本地命名空间也就结束了。
+
+==程序在查询上述三种命名空间的时候，按照从里到外的顺序，即：LocalNamespaces→Global Namesspaces→Built-in Namesspaces。==
+
+```python
+>>>def foo(num,str):
+    name='world'
+    print locals()
+>>>foo(221,'python')
+{'num':221,'name':'world','str':'python'}
+```
+
+![截图20190522220541](C:\Users\storm\Desktop\截图20190522220541.png)
+
+这是一个访问本地命名空间的方法，用print locals()完成，从这个结果中不难看出，所谓的命名空间中的数据存储结构和dictionary是一样的。
+
+根据习惯，如果访问全局命名空间，可以使用print globals()。
+
+#### 4.3.4 作用域 
+
+作用域是指python程序可以直接访问到的命名空间。“直接访问”在这里意味着访问命名空间的命名时无须加入附加的修饰符。
+
+程序也是按照搜索命名空间的顺序，搜索相应空间的能够访问到的作用域。
+
+```python
+>>>def outer_foo():
+    b=20
+    def inner_foo():
+        c=30
+>>>a=10        
+```
+
+假如我现在位于inner_foo()函数内，那么c对我来讲就在本地作用域，而b和a就不是。如果我在inner_foo()内再做：b=50，这其实是在本地命名空间内新创建了对象，和上一层中的b=20毫不相干。可以看下面的例子：
+
+```python
+>>>def outer_foo():
+    a=10
+    def inner_foo():
+        a=20
+        print('inner_foo,a=',a) #a=20
+    inner_foo()
+    print('outer_foo,a=',a) #a=10
+>>>a=30
+>>>outer_foo()
+>>>print('a=',a) #a=30   
+```
+
+运行结果：
+
+```python
+inner_foo, a= 20
+outer_foo, a= 10
+a= 30
+```
+
+如果要将某个变量在任何地方都使用，且能够关联，那么在函数内就使用global声，其实就是曾经讲过的全局变量。
+
+### 4.4 继承
+
+继承是面向对象软件技术中的一个概念。如果一个类别A“继承”自另一个类别B，则把这个A称为"B的子类别"，而把B称为“A的父类别”，也可以称“B是A的超类”。
+
+继承可以使得子类别具有父类别的各种属性和方法，而不需要再次编写相同的代码。在令子类别继承父类别的同时，可以重新定义某些属性，并重写某些方法，即覆盖父类别的原有属性和方法，使其获得与父类别不同的功能。另外，为子类别追加新的属性和方法也是常见的做法。
+
+继承的意图（好处）：
+
+（1）可以实现代码重用，但不仅仅是实现代码重用，有时候根本就没有重用。
+
+（2）实现属性和方法继承。
+
+从技术上说，OOP里继承最主要的用途是实现多态。对于多态而言，重要的是接口继承性，属性和行为是否存在继承性，这是不一定的。事实上，大量工程实践表明，重度的行为继承会导致系统过度复杂和臃肿，反而会降低灵活性。因此现在比较提倡的是基于接口的轻度继承理念。这种模型里因为父类（接口类）完全没有代码，因此根本谈不上什么代码复用。
+
+在python里，因为存在Duck Type ，接口定义的重要性大大降低，继承的作用也进一步被削弱了。
+
+#### 4.4.1基本概念
+
+****
+
+````python
+>>>class Person(object):
+    def speak(self):
+        print("I love you")
+    def SetHeight(self):
+        print（"the height is: 1.60m"）
+    def breast(self,n):
+        print("my breast is:",n)
+>>>class Girl(person):
+    def SetHeight(self):
+        print("the height is: 1.70m")
+>>>cang=Girl()
+>>>cang.SetHeight()
+>>>cang.Speak()
+>>>cang.breast(90)
+````
+
+运行结果：
+
+****
+
+the height is : 1.70m
+
+i love you
+
+my breast is: 90
+
+****
+
+对以上程序进行解释：
+
+首先定义了 一个类Person，在这个类中定义了三个方法。注意，没有定义初始化函数，初始化函数在类中不是必须的。
+
+然后又定义了一个类Girl，这个类的名字后面的括号中是上一个类的名字，这就意味着Girl继承了Person，Girl是Person的子类，Person是Girl的父类。
+
+既然是继承了Person，那么Girl就拥有了Person中的全部方法和属性。但是，如果Gril里面有一个和Person同样名称的方法，那么就把Person中的同一个方法遮盖住了，显示的是Girl中的方法，这叫方法的重写。实例化类girl之后，执行实例方法cang.setHeight()，由于在类girl中重写了setHeight方法，那么Person中的那个方法就不显作用了，在这个实例方法中执行的是类girl中的setHeight方法。
+
+#### 4.4.2 多重继承
+
+所谓多重继承就是指某一个类所继承的父类，不止一个，而是多个。比如：
+
+****
+
+```python
+>>>class person(object):
+    def eye(self):
+        print('two eyes')
+    def breast(self,n):
+        print('the breast is:',n)
+>>>class girl(object):
+    age=28
+    def  color(self):
+        print('the girl is white')
+>>>class hotgilr(person,girl):
+    pass
+>>>kong=hotgirl()
+>>>kong.eye()
+>>>kong.breast(90)
+>>>kong.color()
+>>>print(kong.age
+```
+
+运行结果：
+
+在这个程序中，前面有两个类：person和girl，然后第三个类hotgirl继承了这两个类 。
+
+实例化hotgirl，既然继承了上面的两个类，那么那两个类的方法就都能够拿过来使用。保存程序，运行一下看看：
+
+****
+
+The breast is: 90
+The girl is white
+28
+
+****
+
+值得注意的是，在类girl中，有一个age，在对hotgirl实例化之后，因为继承的原因，这个类属性也被继承到hotgirl中，因此通过实例化属性kong.age一样能得到该数据。
+
+#### 4.4.3 多重继承的顺序
+
+学习多重继承的顺序很有必要。比如，如果一个类继承了两个父类，并且两个父类有同样的方法或者属性，那么在实例化子类后，调用哪个父类的方法和属性呢？
+
+****
+
+```python
+>>>class k1(object):
+    def foo(self):
+        print('k1-foo')
+>>>class k2(object):
+    def foo(self):
+        print('k2-foo')
+    def bar(self):
+        print('k2-bar')
+>>>class j1(k1,k2):
+    pass
+>>>class j2(k1,k2):
+    def bar(self):
+        print('j2-bar')
+>>>class c(j1,j2):
+    pass
+>>>print(c._mro_)
+>>>m=c()
+>>>m.foo()
+>>>m.bar()    
+```
+
+代码中的`print(c._mro_)`是要打印出类的继承顺序。如果要执行foo()方法，首先看J1，没有的，看j2，还没有，看j1里面的k1，有了就执行，即c==>j1==>j2==>k1；bar也是按照这个顺序，在j2中就找到了一个。
+
+这种对继承属性和方法的搜索的顺序称之为“广大优先”。
+
+#### 4.4.4 super 函数
+
+初始化函数的继承跟一般方法的继承还有点不同，可以看下面的例子：
+
+****
+
+```python
+>>>class person(object):
+    def __init__(self):
+        self.height=160
+    def about(self,name):
+        print('{} is about（）'.format(name,self.height))
+>>>class Girl(person):
+    def __init__(self):
+        self.breast=90
+    def about(self,name):
+        print('{} is a hot girl,she is about（）,and her breast \is{}'.format(name,self.height,self.breast))
+>>>cang=Girl()
+>>>cang.about('canglaoshi')
+Traceback (most recent call last):
+  File "C:/Users/storm/Desktop/1.py", line 12, in <module>
+    cang.about('canglaoshi')
+  File "C:/Users/storm/Desktop/1.py", line 10, in about
+    print('{} is a hot girl,she is about（）,and her breast \is{}'.format(name,self.height,self.breast))
+AttributeError: 'Girl' object has no attribute 'height'     
+```
+
+==不求最好，但求报错。==
+
+报错信息显示，self.height是不存在的，也就是说类girl没有从person中继承过来这个属性。
+
+仔细观察girl会发现，除了刚才强调的about方法重写了，`_init_`方法也被重写了，不要觉得它的名字模样奇怪，就不把它看做类中的方法（函数），它跟person中的`_init_`重名了，同样是重写了初始化函数，而gril中的`_init_`中根本就没有关于self.height的任何信息。
+
+子类中重写了父类的某个方法后，父类中同样的方法就被覆盖了。
+
+```python
+>>>class person(object):
+    def __init__(self):
+        self.height=160
+    def about(self,name)：
+         print('{} is about {}'.format(name,self.height))
+>>>class girl(person):
+    def __init__(self):
+        super(girl,self).__int__()
+        self.breast=90
+    def about(self,name):
+        print('{} is a hot girl,she is about（）,and her breast \is{}'.format(name,self.height,self.breast))
+        super(girl,self).about(name)
+>>>cang=girl()
+>>>cang.about('canglaoshi')        
+```
+
+在子类中，`_init_`方法重写了，为了调用父类同方法，使用super(girl,self).`_init_`的方式。super函数的参数，第一个是当前子类的类名字，第二个是self，然后是点号，点号后面是所要调用的父类的方法。同样在子类重写的about方法中，也可以调用父类的about方法。
+
+### 4.5 方法
+
+在程序中，最常见的是实例化类 ，通过实例来调用类的方法，对以往的经验稍作概括：
+
+- 方法是类内部定义的函数，只不过这个函数的第一个参数是self(可以认为方法是类属性，但不是实例属性)。
+- 必须将类实例化之后，才能通过实例调用该类的方法。调用的时候在方法后面要有括号（括号中默认有self参数，但是不写出来）。
+
+通过实例调用方法，我们称这个方法绑定到实例上。
+
+#### 4.5.1 绑定方法
+
+调用绑定方法，其实一直在这样做，司空见惯。比如：
+
+****
+
+```python
+>>>class Person(object):
+    def foo(self):
+        pass
+```
+
+如果要调用Person.foo()方法，必须 ：
+
+****
+
+```python
+>>>pp=Person() #实例化
+>>>pp.foo()
+```
+
+这样就实现了方法和实例的绑定，于是通过pp.foo()即可调用该方法。
+
+#### 4.5.2 非绑定方法
+
+```python
+>>>class person(object):
+    def __init__(self):
+        self.height=160
+    def about(self,name)：
+         print('{} is about {}'.format(name,self.height))
+>>>class girl(person):
+    def __init___(self):
+        super(girl,self).__int__()
+        self.breast=90
+    def about(self,name):
+        print('{} is a hot girl,she is about（）,and her breast \is{}'.format(name,self.height,self.breast))
+        super(girl,self).about(name)
+>>>cang=girl()
+>>>cang.about('canglaoshi')        
+```
+
+在子类girl中，因为重写了父类的`_init_`方法，如果要调用父类该方法，不得不使用super(girl，self).`_init_`调用父类中因为子类方法重写而被遮盖的同名方法。
+
+在子类中，父类的方法就是非绑定方法，因为在子类中，没有建立父类的实例，却用父类的方法。对于这种非绑定方法的调用，还有一种方式，但现在已经较少使用了，因为有了super函数，为了方便读者看其他代码，还是要简单说明一下。
+
+例如在上面的代码中，在类girl中想调用父类Person的初始化函数，则需要在子类中写上这么一行：
+
+`Person.__init__(self)`
+
+这不是通过实例调用的，而是通过类Person实现了对`_init_(self)`的调用。这就是调用非绑定方法的用途。推荐使用super函数。
+
+#### 4.5.3 静态方法和类方法
+
+类的方法第一个参数必须是self，并且如果要调用类的方法，要通过类的实例，即方法绑定实例后才能由实例调用。如果不绑定，一般在继承关系的类之间，可以用super函数等方法调用。
+
+```python
+>>>class staticmethod(object):
+    @staticmethod
+    def foo():
+        print('this is static method foo()')
+>>>class classmethod(object):
+    @classmethod
+    def bar(cls):
+        print('this is class method bar()')
+        print('bar() is part of class',cls._name_)
+>>>static_foo=staticmethod() #实例化
+>>>static_foo.foo() #实例调用静态方法
+>>>staticmethod.foo()#通过类调用静态方法
+>>>print('*'*10)
+>>>class_bar=classmethod()
+>>>class_bar.bar()
+>>>classmethod.bar()
+```
+
+对于这部分代码，有一处非常特别，那就是包含了'@'符号。在python中：
+
+- @staticmetod表示下面的方法是静态方法。
+- @classmethod表示下面的方法是类方法。
+
+先看静态方法，虽然名为静态方法，但也是方法，所以，依然用def语句来定义。需要注意的是文件名后面的括号里面没有self，这和前面定义的类中的方法不同，也正是因为这个不同，才给它另外取了一个名字叫静态方法。
+
+再看类方法，同样也具有一般方法的特点，区别也在参数上，类方法的参数也没有self，但是必须有cls这个参数。在类方法中，能够访问类属性，但是不能访问实例属性。
+
+这两种方法都可以通过实例调用，即绑定实例。也可以通过类来调用，即staticmethod.foo()这样的形式，这也是区别一般方法的地方，一般方法必须通过绑定实例调用。
+
+上述代码运行结果：
+
+****
+
+This is static method foo().
+This is static method foo().
+
+`*************`
+
+This is class method bar().
+bar() is part of class: ClassMethod
+This is class method bar().
+bar() is part of class: ClassMethod
+
+****
+
+### 4.6 多态和封装
+
+#### 4.6.1 多态
+
+```python
+>>>'this is a book'.count('s')
+2
+>>>[1,2,3,4,5,3].count(3)
+2
+```
+
+count函数的作用是数一数某个元素在对象中出现的次数。从例子中可以看出，python并没与限定count的参数所引入的值应该是什么类型的。
+
+````python
+>>>f=lambda x,y:x+y
+>>>f(2,3)
+f
+>>>f('wold','python')
+'woldpython'
+>>>f(['python','java'],['c++','lisp'])
+['python','java','c++','lisp']
+````
+
+同样，在lambda函数中，python同样没有限制应该传入什么样的对象（或者说数据，值）。也就是说，允许给参数传任意类型的数据，并返回相应的结果 ，至于是否报错，则取决于“+”的能力范围。这就是“多态”的体现。
+
+“多态”能否正确表达，不是通过限制传入的对象类型实现，而是这样处理：
+
+```python
+>>>f('a',1)
+Traceback (most recent call last):
+  File "<pyshell#1>", line 1, in <module>
+    f('a',1)
+  File "<pyshell#0>", line 1, in <lambda>
+    f=lambda x,y:x+y
+TypeError: can only concatenate str (not "int") to str
+```
+
+在这个例子中，把判断两个对象是否能够相加的任务交给了“+”，不是放在入口处判断类型是否为字符串或者数字。
+
+多态，是指面向对象程序执行时，相同的信息可能会送给多个不同的类别对象，系统可依据对象所属类别，引发对应类别的方法而有不同的行为。简单来说，所谓多态意指相同的信息给与不同的对象会引发不同的动作。
+
+简化的说法就是“有多种形式”，就算不知道变量（参数）所引用的对象类型，也一样能进行操作，来者不拒。
+
+著名的repr()函数，它能够针对输入的任何对象返回一个字符串，这就是多态的代表之一。
+
+```python
+>>>repr([1,2,3])
+'[1,2,3]'
+>>>repr(1)
+'1'
+```
+
+```python
+>>>def length(x):
+    print('the length of',repr(x),'is',len(x))
+>>>length('how are you')
+the length of 'how are you' is 11.
+```
+
+下面情况会报错：
+
+```python
+>>>length(7)
+Traceback (most recent call last):
+  File "<pyshell#6>", line 1, in <module>
+    length(7)
+  File "<pyshell#2>", line 2, in length
+    print('the length of',repr(x),'is',len(x) )
+TypeError: object of type 'int' has no len()
+```
+
+"猫和狗"
+
+```python
+>>>class animal(object):
+    def __init__(self,name=''):
+        self.name=name
+    def  talk(self):
+        pass
+>>>class cat(animal):
+    def talk(self):
+        print('meow')
+>>>class dog(animal):
+    def talk(self):
+        print("woof")
+>>>a=aniaml()
+>>>a.talk
+>>>c=cat('missy')
+>>>c.talk()
+>>>d=dog('rocky')
+>>>d.talk()
+```
+
+```python
+meow
+woof
+```
+
+代码中有cat和dog两个类，都继承了类animal，它们都有talk()方法，输入不同的动物名称，会得出相应的结果。
+
+#### 4.6.2 封装和私有化
+
+在程序设计中，封装是对对象的一种抽象，即将某些部分隐藏起来，在程序外部看不到，无法调用。
+
+私有化：就是将类或者函数中的某些属性限制在某个区域之内，外部无法调用。
+
+python中的私有化的方法也比较简单，就是在准备私有化的属性（包括方法，数据）名字前面加双下划线。
+
+例如 ：
+
+****
+
+```python
+>>>class protectme(object):
+    def __init__(self):
+        self.me='deng'
+        self.__name='wen'
+    def python(self):
+        print('i love python')
+    def code(self):
+        print('which language do you like')
+        self.__python()
+>>>p=protectme()
+>>>print(p.me)
+>>>print(p.__name)
+```
+
+```python
+deng
+Traceback (most recent call last):
+  File "C:/Users/storm/Desktop/1.py", line 12, in <module>
+    print(p.__me)
+AttributeError: 'protectme' object has no attribute '__me'
+```
+
+查看报错信息，告诉我们没有`__name`那个属性，果然隐藏了。在类的外面无法调用。
+
+如果要调用那些私有化属性怎么办？可以使用property函数 。
+
+****
+
+```python
+>>>class protectme(object):
+    def  __init__(self):
+        self.me='deng'
+        self.__name='wen'
+    @property
+    def name(self):
+        return self.__name
+>>>p=protectme()
+>>>print('p.name')
+wen
+```
+
+从上面可以看出，用了@property函数之后，再调用那个方法的时候 ，用p.name的形式，就像在调用以往非私有化属性一样。
+
+### 4.6 特殊属性和方法
+
