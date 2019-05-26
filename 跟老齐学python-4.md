@@ -1133,3 +1133,263 @@ wen
 
 ### 4.6 特殊属性和方法
 
+在任何类中，都有一些特殊的属性和方法，它们的特殊性从表现就能看出来，通常用双下划线开头和结尾。之所以特殊，是因为它们跟你们自己写的或者其他不是以“__”开头和结尾的属性、方法有所差异。
+
+#### 4.7.1`__dict__`
+
+要访问类或者实例的属性必须通过“object.attribute”的方式，这是我们已经熟知的了。在这个认知的基础上，请思考：类或者实例属性在python中是怎样存储的？如何修改，增加、删除属性，以及我们能不能控制这些属性？
+
+```python
+>>>class A(object):
+    pass
+>>>a=A()
+>>>dir(a)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+>>>dir(A)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__']
+```
+
+用dir()能够查看类的属性和方法，从上面的结果可以看出，数量不少，因为我们写的那个类里面只有pass，所以在列出的结果中，都是以“__”开头和结尾的，这些都是所谓的特殊属性和方法。
+
+从众多的内容中寻觅出`__dict__`，之所以选它，是因为`__dict__`保存了某些机密。
+
+```python
+>>>class spring(object):
+    season="the spring of class"
+>>>spring.__dict__
+mappingproxy({'__module__': '__main__', 'season': 'the spring of class', '__dict__': <attribute '__dict__' of 'spring' objects>, '__weakref__': <attribute '__weakref__' of 'spring' objects>, '__doc__': None})
+```
+
+从结果来看，有一个键'season'，它是这个类的属性，其值就是类属性的数据。
+
+```python
+>>>s=spring() #实例化
+>>>s.__dict__
+{}
+```
+
+实例属性的`__dict__`是空的。
+
+```python
+>>>s.season
+'the spring of class'
+```
+
+s.season指向了spring.season。
+
+```python
+>>>s.season='the spring of instance'
+>>>s.__dict__
+{'season': 'the spring of instance'}
+```
+
+这样，实例属性里面就不为空了。这时候建立的实例属性和上面的那个s.season重名，并且把原来的“遮盖了”。
+
+```python
+>>>s.__dict__['season']#通过键值对方式查询
+'the spring of instance'
+>>>s.season
+'the spring of instance'
+```
+
+我们再查看那个类属性如何？
+
+```python
+>>>spring.__dict['season']
+'the spring of class'
+>>>spring.__dict__
+mappingproxy({'__module__': '__main__', 'season': 'the spring of class', '__dict__': <attribute '__dict__' of 'spring' objects>, '__weakref__': <attribute '__weakref__' of 'spring' objects>, '__doc__': None})
+>>>spring.season
+'the spring of class'
+```
+
+spring的属性没有受到实例属性的影响。
+
+按照前面讲述的类属性和实例属性的操作，如果将实例属性（s.season）删除，会不会回到实例属性`s.__dict__`为空？
+
+****
+
+````python
+>>>del s.season
+>>>s.__dict__
+{}
+>>>s.season
+'the spring of class'
+````
+
+果然打回原形。
+
+当然，你可以定义其他名称的实例属性，它一样被存储到`__dict__`里面：
+
+```python
+>>>s.lang='python'
+>>>s.__dict__
+{'lang': 'python'}
+```
+
+这样做仅仅是改变了实例的`__dict__`内容，对`spring.__dict__`无任何影响。
+
+```python
+>>>spring.flower='peach'
+mappingproxy({'__module__': '__main__', 'season': 'the spring of class', '__dict__': <attribute '__dict__' of 'spring' objects>, '__weakref__': <attribute '__weakref__' of 'spring' objects>, '__doc__': None, 'flower': 'peach'})
+>>>spring.__dict__['flower']
+'peach'
+```
+
+类的`__dict__`被更改了，类属性中增加了一个flower属性。但是实例的`__dict__`如何？
+
+```python
+>>>s.__dict__
+{'lang': 'python'}
+>>>s.flower
+'peach'
+```
+
+通过上面的探讨，是不是基本理了实例和类的`__dict__`，并且也看到了属性的变化特点。特别是，这些属性都是可以动态变化的，即你可以随时修改和增删。
+
+
+
+属性如此，方法呢？
+
+```python
+>>>class spring(object):
+    def tree(self,x):
+        self.x=x
+        return self.x
+>>>spring.__dict__
+mappingproxy({'__module__': '__main__', 'tree': <function spring.tree at 0x00000195BF9D8598>, '__dict__': <attribute '__dict__' of 'spring' objects>, '__weakref__': <attribute '__weakref__' of 'spring' objects>, '__doc__': None}) 
+```
+
+结果跟前面讨论属性差不多，方法tree()也在`__dict__`里面。
+
+```python
+>>>t=spring()
+>>>t.__dict__
+{}
+```
+
+又跟前面一样，虽然建立了实例，但是实例的`__dict__`中没有方法。接下来执行：
+
+```python
+>>>t.tree('canglaoshi')
+'canglaoshi'
+```
+
+果然如此，这样也印证了实例t和self的关系，即实例方法（t.tree('canglaoshi')）的第一个参数（self，但没有写出来）绑定实例t，透过self.x来设定值，给`t.__dict__`添加属性值。
+
+换一个角度看看：
+
+```python
+>>>class spring(object):
+    def tree(self,x):
+        return x    
+```
+
+这个方法中没有将x赋值给self的属性，而是直接return，结果是：
+
+``` python
+>>>s=spring()
+>>>s.tree('liushu')
+'liushu'
+>>>s.__dict__
+{}
+```
+
+现在需要对python中的一个观点：“一切皆对象”在深入领悟。以上不管是类还是实例的属性和方法，都符合object.attribute格式，并且属性类似。
+
+#### 4.7.2 `__slots__`
+
+`__slots__`能够限制属性的定义，但是这不是它存在的终极目标，它存在的终极目标应该是在编程中非常重要的一个方面：优化内存使用。在某些编程中，优化内存是非常重要的。
+
+```python
+>>>class spring(object):
+    __slots__=('tree','flower')
+>>>dir(spring)
+['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', 'flower', 'tree']
+```
+
+仔细看看dir()的结果，已经没有`__dict__`属性了。也就是说`__slots__`把`__dict__`挤出去了，返回来看看，没有`__slots__`，现在它进入类的属性。
+
+```python
+>>>spring.__slots__
+('tree','flower')
+```
+
+从这里可以看出，类spring有且仅有两个属性，并且返回的是一个元组对象。
+
+```python
+>>>t=spring()
+>>>t.__slots__
+('tree','flower')
+```
+
+实例化之后，实例的`__slots__`与类的完全一样，这跟前面的`__dict__`大不一样了。
+
+```python
+>>>spring.tree='liushu'
+```
+
+通过类，先赋予一个属性值。然后检验一个实例能否修改这个属性：
+
+```python
+>>>t.tree='world'
+Traceback (most recent call last):
+  File "<pyshell#13>", line 1, in <module>
+    t.tree='world'
+AttributeError: 'spring' object attribute 'tree' is read-only
+```
+
+不能修改。因为前面已经通过类给这个属性赋值了，不能用实例属性来修改。只能通过类属性来修改。
+
+但是对于没有用类属性赋值的，可以通过实例属性：
+
+```python
+>>>t.flower='world'
+>>>t.flower
+'world'
+>>>spring.flower
+<member 'flower' of 'spring' objects> 
+```
+
+属性实例的值并没有传回到类属性，你也可以理解为新建立了一个同名的实例属性。如果再给类属性赋值就会发生之前一样的情况。
+
+```python
+>>>spring.flower='suzhou'
+>>>t.flower
+'suzhou'
+```
+
+当然，此时再给t.flower重新赋值，就会报出跟前面一样的错误。
+
+```python
+>>>t.flower='world'
+Traceback (most recent call last):
+  File "<pyshell#19>", line 1, in <module>
+    t.flower='world'
+AttributeError: 'spring' object attribute 'flower' is read-only
+```
+
+看来`__slots__`已经把实例属性牢牢把控了起来，但本质上是为了优化内存。诚然，这种优化会在有大量的实例时显出效果。
+
+#### 4.7.3 `__getattr__`、`__setattr__`和其他类似方法
+
+结合4.7.2节内容，看一个例子。
+
+****
+
+```python
+>>>class A(object):
+    pass
+>>>a=A()
+Traceback (most recent call last):
+  File "<pyshell#24>", line 1, in <module>
+    a.x
+AttributeError: 'A' object has no attribute 'x'
+```
+
+x不是实例的成员（“成员”笼统指类的属性和方法）。如果访问a.x，它不存在，那么就要转向某个操作。我们把这种情况称之为“拦截”。在python中，方法具有这种“拦截”能力。
+
+
+
+
+
