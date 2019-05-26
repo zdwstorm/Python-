@@ -1389,6 +1389,190 @@ AttributeError: 'A' object has no attribute 'x'
 
 x不是实例的成员（“成员”笼统指类的属性和方法）。如果访问a.x，它不存在，那么就要转向某个操作。我们把这种情况称之为“拦截”。在python中，方法具有这种“拦截”能力。
 
+- `__setattr__`(self,name,value)：如果要给name赋值，就调用这个方法。
+- `__getattr__`(self,name)：如果name被访问，同时它不存在，此方法被调用。
+- `__getattribute__`(self,name)：当name被访问时自动被调用（注意：这个仅能用于新式类），无论name是否存在，都要被调用。
+- `__delattr__`(self,name)：如果要删除name，这个方法就被调用。
+
+```python
+>>>class A(object):
+    def __getattr__(self,name):
+        print('you are getattr')
+    def __setattr__(self,name,value):
+        print('you are setattr')
+        self.__dict__[name]=value
+```
+
+类A是新式类，除了两个方法，没有别的属性。
+
+```python
+>>>a=A()
+>>>a.x
+you are getattr
+```
+
+依然调用了不存在的属性a.x，按照开头的例子是要报错了。但是，由于在这里使用了`__getattr__`(self,name)方法，当发现x不存在于对象的`__dict__`中，就调用了`__getattr__`拦截成员。
+
+```python
+>>>a.x=7
+you are getattr
+```
+
+给对象的属性赋值时，调用了`__setattr__`(self,name,value)方法，这个方法中有一句`self.__dict__[name]=value`，通过这个语句，就将属性和数据保存到了对象的`__dict__`中，如果再调用这个属性：
+
+```python
+>>>a.x
+7
+```
+
+x已经存在于对象的`__dict__`之中。
+
+在上面的类中，当然可以使用`__getattribute__`(self,name)属性，因为它是新式类，并且，只要访问属性就会调用它。例如：
+
+```python
+>>>class B(object):
+    def __getattribute__(self,name):
+        print('you are using getattribute')
+        return object.__getattribute__(self,name)
+```
+
+为了与前面的类区分，重新搞一个类，在类的方法`__getattribute__`()中使用return  object.`__getattribute__`(self,name)。
+
+再来访问一个不存在的属性：
+
+```python
+>>>b=B()
+>>>b.y
+you are using getattribute
+Traceback (most recent call last):
+  File "C:/Users/storm/Desktop/1.py", line 6, in <module>
+    b.y
+  File "C:/Users/storm/Desktop/1.py", line 4, in __getattribute__
+    return object.__getattribute__(self,name)
+AttributeError: 'B' object has no attribute 'y'
+```
+
+访问不存在的成员，立刻被`__getattibute__`拦截了，虽然最后还是要报错的。
+
+```python
+>>>b.y=8
+>>>b.y
+you are using getattribute
+8
+```
+
+当给其赋值后，意味着其已经在`__dict__`里面了，再调用，依然被拦截，但是由于其已经在`__dict__`内，所以会把结果返回。
+
+特别注意，在这个方法中，没有使用`return self.__dict__[name]`，因为 如果用这样的方式就是访问`self.__dict__`，只要访问类的某个属性，就要调用`__getattribute__`，这样就会导致无限递归下去（死循环）。要避免之。
+
+****
+
+```python
+>>>class Rectangle(object):
+    ```the width and length of rectangle```
+    def __init__(self):
+        self.width=0
+        self.length=0
+    def setsize(self,size):
+        self.width,self.length=size
+    def getsize(self):
+        return self.width,self.length
+>>>r=rectangle()
+>>>r.width=3
+>>>r.length=4
+>>>print(r.getsize())
+>>>r.setsize((30,40))
+>>>print(r.width)
+>>>print(r.length)
+```
+
+```python
+(3,4)
+30
+40
+```
+
+这段代码已经可以正确运行，但是，作为一个精益求精的程序员，总觉得那种调用方式还有可以改进的空间。比如，要给长宽赋值的时候，必须赋予一个元组，里面包含长和宽。这个能不能改进一下？
+
+```python
+>>>class Rectangle(object):
+    ```the width and length of rectangle```
+    def __init__(self):
+        self.width=0
+        self.length=0
+    def setsize(self,size):
+        self.width,self.length=size
+    def getsize(self):
+        return self.width,self.length
+    size=property(getsize,setsize)
+>>>r=rectangle()
+>>>r.width=3
+>>>r.length=4
+>>>print(r.size())
+>>>r.size((30,40))
+>>>print(r.width)
+>>>print(r.length)
+```
+
+以上代码中因为加了一句size=propertty(getsize,setsize)，使得调用方法更优雅了。原来用r.getsize()，现在使用r.size，就好像调用一个属性一样。
+
+虽然优化了上面的代码，但是还没有和本节讲述的特殊的方法拉上关系，所以，还要继续改写。
+
+****
+
+```python
+>>>class newrectangle(object):
+    def __init__(self):
+        self.width=0
+        self.length=0
+    def __setattr__(self,name,value):
+        if name=="size":
+            self.width,,self.length=value
+        else:
+            self.__dict__(name)=value
+    def __getattr__(self,name):
+        if name=="size":
+            return self.width,self.length
+        else:
+            raise AttributeError
+>>>r=newrectangle()
+>>>r.width=3
+>>>r.length=4
+>>>print(r.size())
+>>>r.size((30,40))
+>>>print(r.width)
+>>>print(r.length)
+```
+
+除了类的样式变化之外，调用方式没有变，结果是一样的。
+
+#### 4.7.4 获得属性顺序
+
+通过实例获取其属性，如果在`__dict__`中有，就直接返回其结果；如果没有，会到类属性中找。
+
+```python
+>>>class A(object):
+    author='dengwen'
+    def __getattr__(self,name):
+        if name!='dengwen':
+            return 'from starter to master'
+>>>a=A()
+>>>print(a.author)
+>>>print(a.lang)        
+```
+
+运行结果：
+
+```python
+dengwen
+from starter to master
+```
+
+当a=A()后，并没有为实例建立任何属性，或者说实例的__dict__是空的（意思是说没有某些属性值）。但是如果要查看a.author，因为实例的属性中没有，所以就去类属性中找，发现果然有，于是返回其值qiwsir。但是，找a.lang时候，不仅实例属性中没有，类属性中也没有，于是就调用了__getattr__()方法。幸好在这个类中有这个方法，如果没有__getattr__()方法呢？如果没有定义这个方法，就会引发AttributeError。
+这就是通过实例查找特性的顺序。
+
+### 4.8 迭代器
+
 
 
 
