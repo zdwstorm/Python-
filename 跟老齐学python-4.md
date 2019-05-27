@@ -352,7 +352,7 @@ self是一个很神奇的参数。
 
 在类内部，就是将所有传入的数据都赋给一个变量，通常这个变量的名字是self。注意，这是习惯，而且是共识，所以，你就不要费尽心思另外取别的名字了。
 
-在初始化函数中的第一个参数self就是起到了这个作用—接收实例化过程中传入的所有数据，这些数据是初始化函数的参数导入的。显然，self应该就是一个实例（准确来说是应用实例），因为它所对应的就是具体数据。。
+在初始化函数中的第一个参数self就是起到了这个作用—接收实例化过程中传入的所有数据，这些数据是初始化函数的参数导入的。显然，self应该就是一个实例（准确来说是应用实例），因为它所对应的就是具体数据。
 
 ****
 
@@ -394,7 +394,7 @@ info.name= qiwsir
 info.email= qiwsir@gmail.com #打印结果
 ```
 
-这个例子让我们拓展了对self的认识，它不仅仅是为了在类内部传递参数导入的数据，还能在初始化函数中，通过self.attribute的方式，规定self实例对象的属性，这个属也是类实例化对象的属性，即作为类通过初始化函数初始化后所具有的属性。所以在实例info中，通过info.email同样能够得到该属性的数据。在这里，就可以把self形象地理解为“内外兼修”了。或者按照前面所提到的，将info和self对应起来，self主内、info主外。
+这个例子让我们拓展了对self的认识，它不仅仅是为了在类内部传递参数导入的数据，还能在初始化函数中，通过self.attribute的方式，规定self实例对象的属性，这个属性也是类实例化对象的属性，即作为类通过初始化函数初始化后所具有的属性。所以在实例info中，通过info.email同样能够得到该属性的数据。在这里，就可以把self形象地理解为“内外兼修”了。或者按照前面所提到的，将info和self对应起来，self主内、info主外。
 
 #### 4.2.6 文档字符串
 
@@ -585,9 +585,9 @@ canglaoshi breast is 90
 
 ![截图20190522073332](C:\Users\storm\Desktop\截图20190522073332.png)
 
-创建实例girl=Person('canglaoshi')，注意观察图上的箭头方向。girl这个实例和Person类中的self对应，这正是应了上节所概括的“实例变量与self对应，实例变量主外，self主内”的结论。“canglaoshi”是一个具体的数据，通过初始化函数中的name参数，传给selfname，你应已知self也是一个实例，可以为它设置属性，self.name就是一个属性，经过初始化函数，这个属性的值由参数name传入，现在就是“canglaoshi”。
+创建实例girl=Person('canglaoshi')，注意观察图上的箭头方向。girl这个实例和Person类中的self对应，这正是应了上节所概括的“实例变量与self对应，实例变量主外，self主内”的结论。“canglaoshi”是一个具体的数据，通过初始化函数中的name参数，传给self.name，你应已知self也是一个实例，可以为它设置属性，self.name就是一个属性，经过初始化函数，这个属性的值由参数name传入，现在就是“canglaoshi”。
 
-在类person的其他方法中，都是以self为第一个或唯一一个参数。注意，在python中，这个参数要显明写上，在类内部的 函数的参数是不能省略的。这就表示所有python方法都继承self实例对象，它的属性也被带到每个函数中。例如在其他函数里面使用self.name即是调用前面已经确定的实例属性参数。当然，在函数中，还可以继续为实例self增加属性，比如self.breast。这样，通过self实例，就实现了数据在类内部的流转。
+在类person的其他方法中，都是以self为第一个或唯一一个参数。注意，在python中，这个参数要显明写上，在类内部的函数的参数是不能省略的。这就表示所有python方法都继承self实例对象，它的属性也被带到每个函数中。例如在其他函数里面使用self.name即是调用前面已经确定的实例属性参数。当然，在函数中，还可以继续为实例self增加属性，比如self.breast。这样，通过self实例，就实现了数据在类内部的流转。
 
 如果要把数据从类里面传到外面，可以通过return语句实现。如上述例子中所表示的getName方法。
 
@@ -1609,9 +1609,71 @@ from starter to master
 
 运行结果：
 
+```python
+x.next()=> 0
+x.next()=> 1
+2
+3
+4
+5
+6
+```
 
+以上代码的含义，使自己仿写了拥有range()的对象，这个对象是可迭代的，分析如下：
 
+- `__iter__（）`是类中的核心，它返回了迭代器本身，实现了`__iter__()`方法的对象，即意味着其可迭代。
+- 含有next()的对象就是迭代器，并且在这个方法中，在没有元素的时候要发起StopIteration()异常。
 
+换一种调用方式：
+
+****
+
+```python
+>>>x=myrange(7)
+>>>print (list(s))
+>>>print('x.next()=>',x.next())
+```
+
+运行结果：
+
+```python
+[0,1,2,3,4,5,6]
+x.next()=>
+Traceback (most recent call last):
+File "21401.py", line 26, in <module>
+print "x.next()==>", x.next()
+File "21401.py", line 21, in next
+raise StopIteration()
+StopIteration
+```
+
+print list(x)将对象返回值都装进了列表中并打印出来，这个正常运行了。最终，指针移动到了迭代对象的最后一个，next()方法没有检测，也不知道是不是要停止了 ，它还要继续 下去，当继续下一个的时候，才发现没有元素了，于是返回了StopIteration()。
+
+在使用列表的时候，需要将列表内容一次性都读入到内存中，这就增加了内存的负担。如果列表太大 ，就有内存溢出的危险了。这时候就需要迭代对象。比如斐波那契数列：
+
+****
+
+```python
+>>>class  fibs(object):
+    def __init__(self,max):
+        self.max=max
+        self.a=0
+        self.b=1
+    def __iter__(self):
+        return self
+    def next(self):
+        fib=self.a
+        if fib>self.max:
+            raise StopIteration
+    self.a,self.b=self.b,self.a+sele.b
+>>>fibs=Fibs(5)
+```
+
+运行结果：
+
+`[0,1,1,2,3,5]`
+
+#### 4.8.2 range()和xrange()
 
 
 
